@@ -16,6 +16,6 @@ func main() {
 	handleCors := handlers.CORS(allowedOrigins, allowedMethods)(router)
 
 	// CORS validations
-	log.Fatal(http.ListenAndServe(":8000", handleCors))
+	log.Fatal(http.ListenAndServe("localhost:8000", handleCors))
 
 }

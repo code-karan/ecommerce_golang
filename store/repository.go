@@ -1,15 +1,17 @@
 package store
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"context"
 	"os"
 	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
-    "go.mongodb.org/mongo-driver/mongo/options"
+	// "reflect"
+
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Repository struct{}
@@ -18,11 +20,8 @@ const SERVER = "mongodb+srv://code-karan:14karan5@cluster0.3cghi.mongodb.net/dum
 const DBNAME = "dummyStore"
 const COLLECTION = "store"
 
-
-func (r Repository) GetProducts() []Product {
-
+func MongoConnect() (*mongo.Client, context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(SERVER))
 
 	if err != nil {
@@ -36,6 +35,15 @@ func (r Repository) GetProducts() []Product {
     }
 
     fmt.Println("Connected to MongoDB!")
+
+	return client, ctx, cancel
+}
+
+
+func (r Repository) GetProducts() []Product {
+
+	client, ctx, cancel := MongoConnect()
+	defer cancel()
 
 	// empty array of products
 	var results []Product
@@ -56,13 +64,8 @@ func (r Repository) GetProducts() []Product {
 
 func (r Repository) AddProduct(product Product) bool {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	client, ctx, cancel := MongoConnect()
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(SERVER))
-
-	if err != nil {
-		fmt.Println("Failed to establish connection to Mongo server: ", err)
-	}
 
 	collection := client.Database(DBNAME).Collection(COLLECTION)
 
@@ -72,7 +75,37 @@ func (r Repository) AddProduct(product Product) bool {
 		log.Fatal(err)
 		return false
 	}
-	fmt.Println(product, res)
+	fmt.Println(res)
+
+	return true
+}
+
+func (r Repository) UpdateProduct(product Product) bool {
+
+	client, ctx, cancel := MongoConnect()
+	defer cancel()
+
+	collection := client.Database(DBNAME).Collection(COLLECTION)
+
+	update_payload := bson.M{
+		"$set": bson.M{
+			"title":  product.Title,
+			"image": product.Image,
+			"price": product.Price,
+			"rating": product.Rating,
+		},
+	}
+
+	result, err := collection.UpdateOne(
+		ctx,
+		bson.M{"_id": product.ID},
+		update_payload,
+	)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Updated %v Documents!\n", result.ModifiedCount)
 
 	return true
 }

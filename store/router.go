@@ -37,6 +37,12 @@ var routes = Routes {
 		"/AddProduct",
 		AuthenticationMiddleware(controller.AddProduct),
 	},
+	Route {
+		"UpdateProduct",
+		"POST",
+		"/UpdateProduct",
+		AuthenticationMiddleware(controller.UpdateProduct),
+	},
 }
 
 // DOCS: https://github.com/gorilla/mux#examples

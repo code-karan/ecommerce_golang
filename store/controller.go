@@ -2,7 +2,6 @@ package store
 
 import (
     "encoding/json"
-    "io"
     "io/ioutil"
     "log"
     "fmt"
@@ -87,8 +86,7 @@ func (c *Controller) Index(w http.ResponseWriter, r *http.Request) {
 func (c *Controller) AddProduct(w http.ResponseWriter, r *http.Request) {
 	var product Product
 
-	// https://golang.org/pkg/io/#LimitedReader
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+	body, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
 		log.Fatalln("Error AddProduct", err)
@@ -122,4 +120,30 @@ func (c *Controller) AddProduct(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(http.StatusCreated)
     fmt.Fprintf(w, "Product added successfully")
     return
+}
+
+func (c *Controller) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+    var product Product
+	body, err := ioutil.ReadAll(r.Body)
+
+    if err != nil {
+        fmt.Fprintf(w, "Couldn't read request body")
+    }
+
+    if err := json.Unmarshal(body, &product); err != nil {
+		w.WriteHeader(422) // error unprocessable entity
+
+		if json.NewEncoder(w).Encode(err); err != nil {
+			log.Fatalln("Error AddProduct unmarshalling data", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+    success := c.Repository.UpdateProduct(product)
+	if !success {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 }
