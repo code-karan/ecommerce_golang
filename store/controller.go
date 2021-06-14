@@ -7,9 +7,11 @@ import (
     "fmt"
     "net/http"
     "strings"
+    "strconv"
 
     "github.com/gorilla/context"
     "github.com/dgrijalva/jwt-go"
+    "github.com/gorilla/mux"
 
 )
 
@@ -122,6 +124,7 @@ func (c *Controller) AddProduct(w http.ResponseWriter, r *http.Request) {
     return
 }
 
+
 func (c *Controller) UpdateProduct(w http.ResponseWriter, r *http.Request) {
     var product Product
 	body, err := ioutil.ReadAll(r.Body)
@@ -145,5 +148,28 @@ func (c *Controller) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
 
+
+func (c *Controller) DeleteProduct(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    id, ok := vars["id"]
+    if !ok {
+        fmt.Fprintf(w, "id is missing in parameters")
+    }
+    product_id, err := strconv.Atoi(id)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    success := c.Repository.DeleteProduct(product_id)
+	if !success {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+    w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+    w.WriteHeader(http.StatusOK)
+    fmt.Fprintf(w, "Product deleted successfully")
+    return
 }

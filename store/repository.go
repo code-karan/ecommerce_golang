@@ -109,3 +109,19 @@ func (r Repository) UpdateProduct(product Product) bool {
 
 	return true
 }
+
+func (r Repository) DeleteProduct(id int) bool {
+	client, ctx, cancel := MongoConnect()
+	defer cancel()
+
+	collection := client.Database(DBNAME).Collection(COLLECTION)
+
+	result, err := collection.DeleteOne(ctx, bson.M{"_id": id})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("DeleteOne removed %v document(s)\n", result.DeletedCount)
+
+	return true
+}

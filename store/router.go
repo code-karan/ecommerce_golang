@@ -43,6 +43,12 @@ var routes = Routes {
 		"/UpdateProduct",
 		AuthenticationMiddleware(controller.UpdateProduct),
 	},
+	Route {
+		"DeleteProduct",
+		"DELETE",
+		"/DeleteProduct/{id}",
+		AuthenticationMiddleware(controller.DeleteProduct),
+	},
 }
 
 // DOCS: https://github.com/gorilla/mux#examples
